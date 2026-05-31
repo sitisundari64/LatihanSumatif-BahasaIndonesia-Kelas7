@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sumatif Akhir Tahun - Bahasa Indonesia Kelas 7</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-heading { font-family: 'Crimson Pro', serif; }
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 11px;
+      color: rgba(0,0,0,0.15);
+      pointer-events: none;
+      z-index: 9999;
+      font-style: italic;
+    }
+    .soal-card { transition: all 0.3s ease; }
+    .soal-card:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .option-btn { transition: all 0.2s ease; }
+    .option-btn:hover { transform: scale(1.01); }
+    .option-btn.selected { border-color: #2563eb; background: #eff6ff; }
+    .option-btn.correct { border-color: #16a34a; background: #f0fdf4; }
+    .option-btn.incorrect { border-color: #dc2626; background: #fef2f2; }
+    .pgk-option.selected { border-color: #2563eb; background: #eff6ff; }
+    .pgk-option.correct { border-color: #16a34a; background: #f0fdf4; }
+    .pgk-option.incorrect { border-color: #dc2626; background: #fef2f2; }
+    .progress-bar { transition: width 0.5s ease; }
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .timer-pulse { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .stimulus-box { border-left: 4px solid #6366f1; background: linear-gradient(135deg, #f8fafc, #eef2ff); }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="app" class="h-full w-full overflow-auto">
+   <!-- Login Screen -->
+   <div id="login-screen" class="min-h-full flex items-center justify-center p-4" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1a4068 100%);">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+     <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+       <i data-lucide="book-open" style="width:32px;height:32px;color:#4f46e5;"></i>
+      </div>
+      <h1 class="font-heading text-2xl font-bold text-slate-800">Sumatif Akhir Tahun</h1>
+      <p class="text-slate-500 mt-1">Bahasa Indonesia - Kelas VII</p>
+      <p id="login-sekolah" class="text-sm text-indigo-600 font-medium mt-1">SMP Negeri 1</p>
+     </div>
+     <div class="space-y-4">
+      <div>
+       <label for="input-nama" class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label> <input type="text" id="input-nama" placeholder="Masukkan nama lengkap" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+      </div>
+      <div>
+       <label for="input-kelas" class="block text-sm font-medium text-slate-700 mb-1">Kelas</label> <select id="input-kelas" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"> <option value="">Pilih Kelas</option> <option value="VII-A">VII-A</option> <option value="VII-B">VII-B</option> <option value="VII-C">VII-C</option> <option value="VII-D">VII-D</option> <option value="VII-E">VII-E</option> </select>
+      </div><button id="btn-mulai" onclick="mulaiUjian()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition mt-4"> Mulai Ujian </button>
+      <p id="login-error" class="text-red-500 text-sm text-center hidden">Mohon isi nama dan pilih kelas!</p>
+     </div>
+     <div class="mt-6 p-3 bg-amber-50 rounded-lg border border-amber-200">
+      <p class="text-xs text-amber-700"><strong>Petunjuk:</strong> Waktu pengerjaan <span id="login-waktu">120</span> menit. Kerjakan dengan jujur dan teliti.</p>
+     </div>
+    </div>
+   </div><!-- Exam Screen -->
+   <div id="exam-screen" class="hidden min-h-full">
+    <!-- Header -->
+    <div class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div>
+       <p class="text-sm font-semibold text-slate-800" id="exam-nama"></p>
+       <p class="text-xs text-slate-500" id="exam-kelas-info"></p>
+      </div>
+      <div class="flex items-center gap-4">
+       <div class="text-right">
+        <p class="text-xs text-slate-500">Sisa Waktu</p>
+        <p id="timer" class="text-lg font-bold text-indigo-600">120:00</p>
+       </div><button onclick="submitUjian()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Selesai</button>
+      </div>
+     </div>
+     <div class="h-1 bg-slate-100">
+      <div id="progress-bar" class="h-full bg-indigo-500 progress-bar" style="width:0%"></div>
+     </div>
+    </div><!-- Content -->
+    <div class="max-w-4xl mx-auto px-4 py-6" id="soal-container"></div><!-- Navigation -->
+    <div class="sticky bottom-0 bg-white border-t border-slate-200 p-3">
+     <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <button onclick="prevSoal()" id="btn-prev" class="flex items-center gap-1 text-sm text-slate-600 hover:text-indigo-600 px-3 py-2 rounded-lg hover:bg-slate-100 transition"> <i data-lucide="chevron-left" style="width:16px;height:16px;"></i> Sebelumnya </button>
+      <p class="text-sm text-slate-500">Soal <span id="current-num">1</span> / 40</p><button onclick="nextSoal()" id="btn-next" class="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 px-3 py-2 rounded-lg hover:bg-indigo-50 transition"> Selanjutnya <i data-lucide="chevron-right" style="width:16px;height:16px;"></i> </button>
+     </div>
+    </div>
+   </div><!-- Result Screen -->
+   <div id="result-screen" class="hidden min-h-full flex items-center justify-center p-4" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1a4068 100%);">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg fade-in text-center">
+     <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="check-circle" style="width:40px;height:40px;color:#16a34a;"></i>
+     </div>
+     <h2 class="font-heading text-2xl font-bold text-slate-800 mb-2">Ujian Selesai!</h2>
+     <p id="result-nama" class="text-slate-600 mb-6"></p>
+     <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-blue-50 rounded-xl p-4">
+       <p class="text-2xl font-bold text-blue-600" id="result-pg">0</p>
+       <p class="text-xs text-blue-600">PG (25)</p>
+      </div>
+      <div class="bg-purple-50 rounded-xl p-4">
+       <p class="text-2xl font-bold text-purple-600" id="result-pgk">0</p>
+       <p class="text-xs text-purple-600">PG Kompleks (10)</p>
+      </div>
+      <div class="bg-green-50 rounded-xl p-4">
+       <p class="text-2xl font-bold text-green-600" id="result-total">0</p>
+       <p class="text-xs text-green-600">Total Skor</p>
+      </div>
+     </div>
+     <p class="text-sm text-slate-500 mb-4">Soal uraian akan dinilai oleh guru.</p><button onclick="lihatPembahasan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition">Lihat Pembahasan</button>
+    </div>
+   </div><!-- Review Screen -->
+   <div id="review-screen" class="hidden min-h-full bg-slate-50">
+    <div class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm p-4">
+     <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <h2 class="font-heading text-xl font-bold text-slate-800">Pembahasan Soal</h2><button onclick="location.reload()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Selesai</button>
+     </div>
+    </div>
+    <div class="max-w-4xl mx-auto px-4 py-6" id="review-container"></div>
+   </div>
+  </div>
+  <div class="watermark">
+   © Siti Sundari
+  </div>
+  <script>
+// ============ CONFIG & SDK INIT ============
+const defaultConfig = {
+  nama_sekolah: 'Sekolahku',
+  waktu_ujian: '120',
+  background_color: '#1e3a5f',
+  surface_color: '#ffffff',
+  text_color: '#1e293b',
+  primary_color: '#4f46e5',
+  secondary_color: '#16a34a'
+};
+
+let config = { ...defaultConfig };
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (cfg) => {
+    config = { ...defaultConfig, ...cfg };
+    const sekolah = document.getElementById('login-sekolah');
+    if (sekolah) sekolah.textContent = config.nama_sekolah || defaultConfig.nama_sekolah;
+    const waktu = document.getElementById('login-waktu');
+    if (waktu) waktu.textContent = config.waktu_ujian || defaultConfig.waktu_ujian;
+  },
+  mapToCapabilities: (cfg) => ({
+    recolorables: [
+      { get: () => cfg.background_color || defaultConfig.background_color, set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); }},
+      { get: () => cfg.surface_color || defaultConfig.surface_color, set: (v) => { cfg.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }},
+      { get: () => cfg.text_color || defaultConfig.text_color, set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }},
+      { get: () => cfg.primary_color || defaultConfig.primary_color, set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); }},
+      { get: () => cfg.secondary_color || defaultConfig.secondary_color, set: (v) => { cfg.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); }}
+    ],
+    borderables: [],
+    fontEditable: undefined,
+    fontSizeable: undefined
+  }),
+  mapToEditPanelValues: (cfg) => new Map([
+    ['nama_sekolah', cfg.nama_sekolah || defaultConfig.nama_sekolah],
+    ['waktu_ujian', cfg.waktu_ujian || defaultConfig.waktu_ujian]
+  ])
+});
+
+// ============ DATA SDK ============
+let savedRecords = [];
+const dataHandler = {
+  onDataChanged(data) { savedRecords = data; }
+};
+window.dataSdk.init(dataHandler);
+
+// ============ SOAL DATA ============
+const soalPG = [
+  // TEKS PROSEDUR (1-5)
+  {
+    no: 1,
+    stimulus: '📋 Perhatikan teks berikut!\n\n"Cara Membuat Origami Burung"\n1. Siapkan selembar kertas origami berbentuk persegi.\n2. Lipat kertas menjadi segitiga dengan mempertemukan dua sudut diagonal.\n3. Lipat kembali segitiga menjadi segitiga lebih kecil.\n4. Buka lipatan terakhir, lalu lipat kedua sisi ke garis tengah.\n5. Balik kertas dan lipat bagian atas ke bawah untuk membentuk kepala burung.\n6. Origami burung siap dipajang.',
+    soal: 'Teks di atas termasuk jenis teks ...',
+    opsi: ['Narasi', 'Prosedur', 'Eksposisi', 'Deskripsi'],
+    jawaban: 1,
+    pembahasan: 'Teks tersebut berisi langkah-langkah membuat sesuatu secara berurutan, sehingga termasuk teks prosedur.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 2,
+    stimulus: '📋 Perhatikan teks "Cara Membuat Origami Burung" di atas!',
+    soal: 'Tujuan dari teks prosedur tersebut adalah ...',
+    opsi: ['Menceritakan pengalaman membuat origami', 'Menjelaskan langkah-langkah membuat origami burung', 'Mendeskripsikan bentuk origami burung', 'Membujuk pembaca agar membeli kertas origami'],
+    jawaban: 1,
+    pembahasan: 'Tujuan teks prosedur adalah menjelaskan langkah-langkah melakukan atau membuat sesuatu.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 3,
+    stimulus: '📋 Perhatikan kalimat berikut!\n"Pertama, cuci beras hingga bersih. Kemudian, masukkan beras ke dalam panci. Selanjutnya, tambahkan air secukupnya."',
+    soal: 'Kata "pertama", "kemudian", dan "selanjutnya" dalam teks prosedur berfungsi sebagai ...',
+    opsi: ['Kata sifat', 'Konjungsi temporal', 'Kata keterangan tempat', 'Kata benda'],
+    jawaban: 1,
+    pembahasan: 'Kata-kata tersebut merupakan konjungsi temporal (penghubung waktu) yang menunjukkan urutan langkah dalam teks prosedur.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 4,
+    stimulus: '📋 Stimulus: Dalam sebuah teks prosedur "Cara Merawat Tanaman Hias", terdapat bagian:\n• Judul\n• Bahan dan alat\n• Langkah-langkah\n• Penutup',
+    soal: 'Bagian yang TIDAK termasuk struktur teks prosedur adalah ...',
+    opsi: ['Judul', 'Langkah-langkah', 'Orientasi', 'Bahan dan alat'],
+    jawaban: 2,
+    pembahasan: 'Orientasi adalah bagian dari struktur teks narasi/cerita, bukan teks prosedur. Struktur teks prosedur: judul, tujuan, bahan/alat, langkah-langkah.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 5,
+    stimulus: '📋 Perhatikan kalimat berikut!\n(1) Aduk adonan hingga tercampur rata.\n(2) Saya sangat senang membuat kue.\n(3) Tuangkan adonan ke dalam cetakan.\n(4) Panggang selama 30 menit dengan suhu 180°C.',
+    soal: 'Kalimat yang BUKAN merupakan kalimat perintah dalam teks prosedur adalah nomor ...',
+    opsi: ['(1)', '(2)', '(3)', '(4)'],
+    jawaban: 1,
+    pembahasan: 'Kalimat (2) bukan kalimat perintah melainkan kalimat pernyataan yang mengungkapkan perasaan. Kalimat perintah dalam teks prosedur menggunakan kata kerja imperatif.',
+    tingkat: 'sulit'
+  },
+  // TEKS BERITA (6-10)
+  {
+    no: 6,
+    stimulus: '📰 Bacalah teks berita berikut!\n\n"Banjir Rendam Permukiman Warga di Kecamatan Suka Maju"\n\nHujan deras yang mengguyur Kecamatan Suka Maju sejak Senin malam (12/3/2024) menyebabkan banjir setinggi 1 meter di tiga kelurahan. Sebanyak 200 warga mengungsi ke gedung sekolah dan balai desa. Kepala BPBD setempat, Bapak Ahmad Fauzi, menyatakan bahwa bantuan logistik telah disalurkan. "Kami telah mengirimkan 500 paket makanan dan selimut," ujarnya. Penyebab banjir diduga akibat saluran drainase yang tersumbat sampah.',
+    soal: 'Unsur "kapan" (when) dalam berita tersebut adalah ...',
+    opsi: ['Kecamatan Suka Maju', 'Senin malam, 12 Maret 2024', 'Bapak Ahmad Fauzi', '200 warga'],
+    jawaban: 1,
+    pembahasan: 'Unsur "kapan" (when) menunjukkan waktu kejadian, yaitu Senin malam, 12 Maret 2024.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 7,
+    stimulus: '📰 Berdasarkan teks berita "Banjir Rendam Permukiman Warga" di atas.',
+    soal: 'Unsur "mengapa" (why) dalam berita tersebut adalah ...',
+    opsi: ['Hujan deras mengguyur kecamatan', 'Saluran drainase tersumbat sampah', 'Warga mengungsi ke gedung sekolah', 'Bantuan logistik disalurkan'],
+    jawaban: 1,
+    pembahasan: 'Unsur "mengapa" menjelaskan penyebab peristiwa. Penyebab banjir adalah saluran drainase yang tersumbat sampah.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 8,
+    stimulus: '📰 Perhatikan judul berita berikut!\n"Tim Basket SMP Harapan Bangsa Raih Juara Nasional"',
+    soal: 'Judul berita yang baik memiliki ciri-ciri berikut, KECUALI ...',
+    opsi: ['Singkat dan padat', 'Menarik perhatian pembaca', 'Menggunakan bahasa yang berlebihan dan provokatif', 'Mencerminkan isi berita'],
+    jawaban: 2,
+    pembahasan: 'Judul berita harus singkat, menarik, dan mencerminkan isi. Bahasa yang berlebihan dan provokatif bukan ciri judul berita yang baik.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 9,
+    stimulus: '📰 Perhatikan struktur teks berita!\n\nStruktur teks berita terdiri dari: judul, teras berita (lead), tubuh berita, dan ekor berita.',
+    soal: 'Bagian teks berita yang memuat inti informasi terpenting dan menjawab unsur 5W+1H secara ringkas disebut ...',
+    opsi: ['Judul berita', 'Teras berita (lead)', 'Tubuh berita', 'Ekor berita'],
+    jawaban: 1,
+    pembahasan: 'Teras berita (lead) adalah paragraf pertama yang berisi inti informasi terpenting dan menjawab unsur 5W+1H secara ringkas.',
+    tingkat: 'sulit'
+  },
+  {
+    no: 10,
+    stimulus: '📰 Perhatikan kalimat berikut!\n"Menurut informasi yang belum dikonfirmasi, kemungkinan gedung itu akan direnovasi tahun depan."',
+    soal: 'Kalimat di atas tidak memenuhi syarat bahasa berita yang baik karena ...',
+    opsi: ['Terlalu panjang', 'Tidak menggunakan bahasa baku', 'Tidak berdasarkan fakta yang jelas dan terverifikasi', 'Menggunakan kalimat aktif'],
+    jawaban: 2,
+    pembahasan: 'Berita harus berdasarkan fakta yang jelas dan terverifikasi. Frasa "belum dikonfirmasi" dan "kemungkinan" menunjukkan informasi belum pasti.',
+    tingkat: 'sulit'
+  },
+  // SURAT PRIBADI (11-14)
+  {
+    no: 11,
+    stimulus: '✉️ Perhatikan penggalan surat berikut!\n\n"Bandung, 15 Maret 2024\n\nUntuk sahabatku Rina,\n\nApa kabar? Sudah lama kita tidak bertemu ya. Aku rindu sekali dengan masa-masa kita bermain bersama di taman belakang rumah nenek. Apakah kamu masih sering ke sana?\n\nSalam rindu,\nDina"',
+    soal: 'Surat di atas termasuk jenis ...',
+    opsi: ['Surat dinas', 'Surat pribadi', 'Surat undangan resmi', 'Surat edaran'],
+    jawaban: 1,
+    pembahasan: 'Surat tersebut ditulis untuk keperluan pribadi (komunikasi antar sahabat), menggunakan bahasa tidak resmi, sehingga termasuk surat pribadi.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 12,
+    stimulus: '✉️ Berdasarkan surat Dina untuk Rina di atas.',
+    soal: 'Ciri bahasa yang digunakan dalam surat pribadi tersebut adalah ...',
+    opsi: ['Bahasa resmi dan baku', 'Bahasa santai dan akrab', 'Bahasa ilmiah', 'Bahasa persuasif'],
+    jawaban: 1,
+    pembahasan: 'Surat pribadi menggunakan bahasa santai, akrab, dan tidak formal karena ditujukan untuk orang yang memiliki hubungan dekat.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 13,
+    stimulus: '✉️ Perhatikan bagian-bagian surat pribadi berikut!\n(1) Tanggal surat\n(2) Nomor surat\n(3) Salam pembuka\n(4) Isi surat\n(5) Lampiran',
+    soal: 'Bagian yang TIDAK terdapat dalam surat pribadi adalah ...',
+    opsi: ['(1) dan (3)', '(2) dan (5)', '(3) dan (4)', '(1) dan (4)'],
+    jawaban: 1,
+    pembahasan: 'Nomor surat dan lampiran adalah bagian surat dinas/resmi, bukan surat pribadi.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 14,
+    stimulus: '✉️ Perhatikan situasi berikut!\n\nAndi ingin mengucapkan terima kasih kepada neneknya yang tinggal di desa karena telah mengirimkan oleh-oleh khas daerah.',
+    soal: 'Kalimat pembuka yang tepat untuk surat pribadi Andi adalah ...',
+    opsi: ['Dengan hormat, bersama surat ini saya sampaikan...', 'Nenek tersayang, apa kabar? Semoga nenek selalu sehat ya!', 'Kepada Yth. Nenek di tempat', 'Hal: Ucapan Terima Kasih'],
+    jawaban: 1,
+    pembahasan: 'Surat pribadi menggunakan sapaan yang akrab dan hangat sesuai hubungan pengirim dengan penerima.',
+    tingkat: 'sedang'
+  },
+  // SURAT DINAS (15-17)
+  {
+    no: 15,
+    stimulus: '🏛️ Perhatikan penggalan surat berikut!\n\n"Nomor: 021/OSIS/III/2024\nHal: Permohonan Izin Kegiatan\nLampiran: 1 lembar\n\nKepada Yth.\nKepala SMP Negeri 5 Surabaya\ndi Tempat\n\nDengan hormat,\nBersama surat ini, kami pengurus OSIS bermaksud memohon izin untuk menyelenggarakan kegiatan Pentas Seni pada tanggal 20 April 2024..."',
+    soal: 'Surat di atas termasuk jenis surat ...',
+    opsi: ['Surat pribadi', 'Surat dinas', 'Surat niaga', 'Surat lamaran'],
+    jawaban: 1,
+    pembahasan: 'Surat tersebut memiliki nomor surat, hal, lampiran, dan bahasa resmi yang merupakan ciri surat dinas.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 16,
+    stimulus: '🏛️ Berdasarkan surat OSIS di atas.',
+    soal: 'Perbedaan utama antara surat dinas dan surat pribadi terletak pada ...',
+    opsi: ['Penggunaan tanggal surat', 'Penggunaan bahasa resmi, nomor surat, dan kop surat', 'Penggunaan salam pembuka', 'Adanya tanda tangan pengirim'],
+    jawaban: 1,
+    pembahasan: 'Surat dinas menggunakan bahasa resmi, memiliki nomor surat, kop surat, dan bersifat formal. Ini yang membedakannya dari surat pribadi.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 17,
+    stimulus: '🏛️ Perhatikan bagian-bagian surat dinas!\n\nSeorang siswa diminta menyusun surat undangan rapat OSIS. Ia harus menyusun bagian-bagian surat dengan urutan yang benar.',
+    soal: 'Urutan yang benar dalam penulisan surat dinas adalah ...',
+    opsi: ['Kop surat – tanggal – nomor – hal – alamat – salam pembuka – isi – penutup – tanda tangan', 'Tanggal – kop surat – isi – salam pembuka – penutup', 'Alamat – tanggal – isi – salam penutup – kop surat', 'Nomor – isi – kop surat – tanggal – penutup'],
+    jawaban: 0,
+    pembahasan: 'Urutan surat dinas yang benar: kop surat, tanggal, nomor, hal/lampiran, alamat tujuan, salam pembuka, isi, salam penutup, tanda tangan.',
+    tingkat: 'sulit'
+  },
+  // PUISI RAKYAT (18-21)
+  {
+    no: 18,
+    stimulus: '🎭 Perhatikan puisi rakyat berikut!\n\n"Kalau ada sumur di ladang\nBoleh kita menumpang mandi\nKalau ada umur yang panjang\nBoleh kita berjumpa lagi"',
+    soal: 'Puisi rakyat di atas termasuk jenis ...',
+    opsi: ['Syair', 'Pantun', 'Gurindam', 'Mantra'],
+    jawaban: 1,
+    pembahasan: 'Puisi tersebut memiliki ciri pantun: 4 baris, bersajak a-b-a-b, baris 1-2 sampiran, baris 3-4 isi.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 19,
+    stimulus: '🎭 Berdasarkan pantun di atas.',
+    soal: 'Baris yang merupakan sampiran dalam pantun tersebut adalah ...',
+    opsi: ['Baris 1 dan 2', 'Baris 3 dan 4', 'Baris 1 dan 3', 'Baris 2 dan 4'],
+    jawaban: 0,
+    pembahasan: 'Sampiran pantun terdapat pada baris 1 dan 2, sedangkan isi/maksud pantun pada baris 3 dan 4.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 20,
+    stimulus: '🎭 Perhatikan puisi rakyat berikut!\n\n"Barang siapa tiada memegang agama\nSekali-kali tiada boleh dibilang nama\nBarang siapa meninggalkan sembahyang\nBagai rumah tiada bertiang"',
+    soal: 'Puisi rakyat di atas termasuk jenis ...',
+    opsi: ['Pantun', 'Syair', 'Gurindam', 'Mantra'],
+    jawaban: 2,
+    pembahasan: 'Gurindam terdiri dari dua baris yang berpasangan (sebab-akibat), berisi nasihat/ajaran moral. Baris pertama berisi syarat, baris kedua akibat.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 21,
+    stimulus: '🎭 Perhatikan ciri-ciri puisi rakyat berikut!\n• Terdiri atas empat baris setiap bait\n• Setiap baris terdiri atas 8-12 suku kata\n• Bersajak a-a-a-a\n• Semua baris merupakan isi (tidak ada sampiran)',
+    soal: 'Ciri-ciri di atas merupakan ciri dari ...',
+    opsi: ['Pantun', 'Gurindam', 'Syair', 'Mantra'],
+    jawaban: 2,
+    pembahasan: 'Syair memiliki ciri: 4 baris per bait, 8-12 suku kata per baris, rima a-a-a-a, dan semua baris merupakan isi.',
+    tingkat: 'sedang'
+  },
+  // BUKU FIKSI & NON FIKSI (22-23)
+  {
+    no: 22,
+    stimulus: '📚 Perhatikan pernyataan berikut!\n\n(1) Novel "Laskar Pelangi" karya Andrea Hirata\n(2) Ensiklopedia Anak Indonesia\n(3) Kumpulan cerpen "Senyum Karyamin"\n(4) Buku panduan "Cara Budidaya Ikan Lele"\n(5) Dongeng "Timun Mas"',
+    soal: 'Yang termasuk buku fiksi ditunjukkan oleh nomor ...',
+    opsi: ['(1), (2), dan (4)', '(1), (3), dan (5)', '(2), (3), dan (4)', '(2), (4), dan (5)'],
+    jawaban: 1,
+    pembahasan: 'Buku fiksi berisi cerita rekaan/imajinasi pengarang: novel, cerpen, dan dongeng. Ensiklopedia dan buku panduan termasuk nonfiksi.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 23,
+    stimulus: '📚 Perhatikan ciri-ciri buku berikut!\n\n• Berisi informasi berdasarkan fakta dan data\n• Menggunakan bahasa lugas dan denotatif\n• Bertujuan menyampaikan ilmu pengetahuan\n• Disusun berdasarkan penelitian atau pengamatan',
+    soal: 'Ciri-ciri di atas merupakan ciri dari buku ...',
+    opsi: ['Fiksi', 'Nonfiksi', 'Dongeng', 'Novel'],
+    jawaban: 1,
+    pembahasan: 'Buku nonfiksi berisi fakta, data, dan informasi berdasarkan penelitian. Menggunakan bahasa lugas dan bertujuan menyampaikan pengetahuan.',
+    tingkat: 'mudah'
+  },
+  // FABEL / CERITA FANTASI (24-25)
+  {
+    no: 24,
+    stimulus: '🦊 Bacalah penggalan cerita berikut!\n\n"Kancil berjalan santai di tepi sungai. Tiba-tiba ia melihat Buaya yang sedang berjemur di atas batu. \'Hai Buaya, aku ingin menyeberangi sungai ini. Maukah kau membantuku?\' tanya Kancil dengan suara ramah. Buaya menyeringai, \'Tentu, naiklah ke punggungku.\' Namun Kancil tahu, Buaya punya niat jahat. Maka ia pun menyusun siasat yang cerdik."',
+    soal: 'Cerita di atas termasuk jenis ...',
+    opsi: ['Legenda', 'Fabel', 'Mitos', 'Sage'],
+    jawaban: 1,
+    pembahasan: 'Fabel adalah cerita yang tokoh-tokohnya binatang yang berperilaku seperti manusia (dapat berbicara dan berpikir).',
+    tingkat: 'mudah'
+  },
+  {
+    no: 25,
+    stimulus: '🦊 Perhatikan penggalan cerita fantasi berikut!\n\n"Arka membuka portal dimensi dengan kristal ajaib milik kakeknya. Di balik portal, ia menemukan dunia yang seluruh penghuninya adalah makhluk setengah manusia setengah tumbuhan. Mereka berkomunikasi melalui getaran akar yang menjalar di bawah tanah. Arka harus menemukan Bunga Kehidupan sebelum matahari ketiga terbenam."',
+    soal: 'Ciri cerita fantasi yang paling menonjol dalam penggalan di atas adalah ...',
+    opsi: ['Menggunakan setting masa lampau', 'Tokohnya binatang yang bisa bicara', 'Mengandung unsur magis dan dunia yang tidak nyata', 'Menceritakan asal-usul suatu tempat'],
+    jawaban: 2,
+    pembahasan: 'Cerita fantasi memiliki ciri utama: mengandung unsur magis, dunia yang tidak nyata (portal dimensi, makhluk fantasi, kristal ajaib).',
+    tingkat: 'sedang'
+  }
+];
+
+// PG KOMPLEKS (10 soal)
+const soalPGK = [
+  {
+    no: 26,
+    stimulus: '📋 Perhatikan teks prosedur berikut!\n\n"Cara Membuat Jus Alpukat"\nBahan: 1 buah alpukat matang, 3 sendok gula, susu kental manis, es batu, air secukupnya.\nLangkah:\n1. Belah alpukat dan ambil dagingnya.\n2. Masukkan daging alpukat ke dalam blender.\n3. Tambahkan gula, susu, dan air.\n4. Blender hingga halus.\n5. Tuang ke dalam gelas dan tambahkan es batu.\n6. Jus alpukat siap disajikan.',
+    soal: 'Pilihlah pernyataan yang BENAR tentang teks prosedur di atas! (Pilih 3 jawaban)',
+    opsi: ['Teks tersebut memiliki struktur: judul, bahan, dan langkah-langkah', 'Kalimat dalam langkah-langkah menggunakan kalimat perintah (imperatif)', 'Teks tersebut menggunakan konjungsi temporal', 'Teks tersebut bertujuan menghibur pembaca'],
+    jawaban: [0, 1, 2],
+    pembahasan: 'Teks prosedur memiliki struktur (judul, bahan, langkah), menggunakan kalimat perintah (belah, masukkan, tambahkan), dan konjungsi temporal (urutan langkah). Tujuannya bukan menghibur melainkan memberi petunjuk.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 27,
+    stimulus: '📰 Perhatikan unsur-unsur berita!\n\nSebuah berita yang lengkap harus memuat unsur 5W+1H.',
+    soal: 'Pilihlah yang termasuk unsur 5W+1H dalam teks berita! (Pilih 4 jawaban)',
+    opsi: ['What (apa yang terjadi)', 'Where (di mana peristiwa terjadi)', 'How (bagaimana peristiwa terjadi)', 'Which (yang mana peristiwanya)'],
+    jawaban: [0, 1, 2],
+    pembahasan: 'Unsur 5W+1H: What, Who, When, Where, Why, How. "Which" bukan bagian dari unsur berita.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 28,
+    stimulus: '✉️ Perhatikan perbedaan surat pribadi dan surat dinas!',
+    soal: 'Pilihlah ciri-ciri yang membedakan surat dinas dari surat pribadi! (Pilih 3 jawaban)',
+    opsi: ['Memiliki kop surat/kepala surat resmi', 'Menggunakan bahasa santai dan akrab', 'Terdapat nomor surat', 'Menggunakan bahasa baku dan resmi'],
+    jawaban: [0, 2, 3],
+    pembahasan: 'Surat dinas memiliki kop surat, nomor surat, dan menggunakan bahasa baku. Bahasa santai adalah ciri surat pribadi.',
+    tingkat: 'mudah'
+  },
+  {
+    no: 29,
+    stimulus: '🎭 Perhatikan pantun berikut!\n\n"Pergi ke pasar membeli mangga\nMangga dibawa pulang ke rumah\nRajin belajar janganlah lupa\nAgar cita-cita mudah diraih"',
+    soal: 'Pilihlah ciri pantun yang terdapat dalam puisi rakyat di atas! (Pilih 3 jawaban)',
+    opsi: ['Terdiri atas empat baris dalam satu bait', 'Bersajak a-b-a-b', 'Baris 1-2 merupakan sampiran', 'Semua baris merupakan isi'],
+    jawaban: [0, 1, 2],
+    pembahasan: 'Pantun memiliki ciri: 4 baris, sajak a-b-a-b, baris 1-2 sampiran dan 3-4 isi. "Semua baris isi" adalah ciri syair.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 30,
+    stimulus: '📚 Perhatikan perbandingan buku fiksi dan nonfiksi!',
+    soal: 'Pilihlah yang merupakan ciri buku fiksi! (Pilih 3 jawaban)',
+    opsi: ['Berisi cerita rekaan atau imajinasi pengarang', 'Menggunakan bahasa konotatif dan imajinatif', 'Memiliki unsur intrinsik seperti tema, tokoh, dan alur', 'Disusun berdasarkan hasil penelitian'],
+    jawaban: [0, 1, 2],
+    pembahasan: 'Buku fiksi berisi cerita rekaan, menggunakan bahasa imajinatif, dan memiliki unsur intrinsik. Penelitian adalah ciri nonfiksi.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 31,
+    stimulus: '🦊 Perhatikan ciri-ciri cerita!\n\nFabel dan cerita fantasi sama-sama merupakan karya sastra imajinatif, tetapi memiliki perbedaan.',
+    soal: 'Pilihlah ciri yang HANYA dimiliki oleh fabel! (Pilih 2 jawaban)',
+    opsi: ['Tokoh utamanya adalah binatang', 'Mengandung pesan moral/amanat yang jelas', 'Terdapat dunia paralel atau portal dimensi', 'Binatang memiliki sifat dan perilaku manusia'],
+    jawaban: [0, 3],
+    pembahasan: 'Fabel memiliki ciri khas: tokoh utama binatang yang berperilaku seperti manusia. Dunia paralel adalah ciri cerita fantasi. Pesan moral ada di kedua jenis cerita.',
+    tingkat: 'sulit'
+  },
+  {
+    no: 32,
+    stimulus: '📋 Perhatikan kalimat-kalimat berikut!\n(1) Siapkan bahan-bahan yang diperlukan.\n(2) Setelah itu, campurkan semua bahan.\n(3) Menurut saya, resep ini sangat enak.\n(4) Aduk hingga adonan mengembang.\n(5) Kemarin saya membuat kue bersama ibu.',
+    soal: 'Pilihlah kalimat yang tepat digunakan dalam teks prosedur! (Pilih 3 jawaban)',
+    opsi: ['Kalimat (1)', 'Kalimat (2)', 'Kalimat (3)', 'Kalimat (4)'],
+    jawaban: [0, 1, 3],
+    pembahasan: 'Kalimat (1), (2), dan (4) menggunakan kalimat perintah/imperatif yang sesuai dengan teks prosedur. Kalimat (3) berisi opini dan kalimat (5) berisi pengalaman.',
+    tingkat: 'sulit'
+  },
+  {
+    no: 33,
+    stimulus: '📰 Perhatikan teks berita!\n\n"Jakarta, 5 April 2024 — Pemerintah resmi mengumumkan kebijakan baru tentang kurikulum sekolah. Menteri Pendidikan menyatakan perubahan ini bertujuan meningkatkan kualitas pembelajaran. Kebijakan mulai berlaku semester depan."',
+    soal: 'Pilihlah unsur 5W+1H yang terdapat dalam kutipan berita di atas! (Pilih 3 jawaban)',
+    opsi: ['What: kebijakan baru tentang kurikulum', 'When: 5 April 2024', 'Who: Menteri Pendidikan', 'How: melalui rapat paripurna DPR'],
+    jawaban: [0, 1, 2],
+    pembahasan: 'Berita memuat What (kebijakan baru), When (5 April 2024), Who (Menteri Pendidikan). "Melalui rapat DPR" tidak disebutkan dalam teks.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 34,
+    stimulus: '🎭 Perhatikan jenis-jenis puisi rakyat!\n\nPuisi rakyat Indonesia memiliki beragam jenis dengan ciri masing-masing.',
+    soal: 'Pilihlah pernyataan yang BENAR tentang gurindam! (Pilih 2 jawaban)',
+    opsi: ['Terdiri atas dua baris yang berhubungan sebab-akibat', 'Memiliki sampiran pada baris pertama', 'Berisi nasihat atau ajaran moral', 'Bersajak a-b-a-b'],
+    jawaban: [0, 2],
+    pembahasan: 'Gurindam terdiri dari 2 baris berhubungan sebab-akibat dan berisi nasihat/ajaran moral. Sampiran dan sajak a-b-a-b adalah ciri pantun.',
+    tingkat: 'sulit'
+  },
+  {
+    no: 35,
+    stimulus: '🦊 Bacalah penggalan fabel berikut!\n\n"Semut yang kecil tidak pernah menyerah mengangkut makanan ke sarangnya. Meski tubuhnya kecil, ia selalu bekerja keras setiap hari. Sementara Belalang hanya bermalas-malasan sepanjang musim panas."',
+    soal: 'Pilihlah amanat/pesan moral yang terkandung dalam fabel di atas! (Pilih 2 jawaban)',
+    opsi: ['Kerja keras akan membuahkan hasil', 'Jangan bermalas-malasan', 'Binatang kecil lebih pintar dari binatang besar', 'Musim panas adalah waktu terbaik bermain'],
+    jawaban: [0, 1],
+    pembahasan: 'Fabel ini mengajarkan pentingnya kerja keras (Semut) dan bahaya bermalas-malasan (Belalang). Ukuran tubuh dan waktu bermain bukan pesan moral cerita.',
+    tingkat: 'mudah'
+  }
+];
+
+// SOAL URAIAN (5 soal)
+const soalUraian = [
+  {
+    no: 36,
+    stimulus: '📋 Perhatikan situasi berikut!\n\nKamu ingin mengajarkan teman-temanmu cara membuat kerajinan tangan dari botol plastik bekas untuk kegiatan daur ulang di sekolah.',
+    soal: 'Buatlah teks prosedur singkat (minimal 5 langkah) tentang cara membuat tempat pensil dari botol plastik bekas! Sertakan judul, bahan/alat, dan langkah-langkah yang jelas.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 37,
+    stimulus: '📰 Perhatikan peristiwa berikut!\n\nDi sekolahmu baru saja dilaksanakan kegiatan "Jumat Bersih" yang diikuti seluruh warga sekolah. Kegiatan ini bertujuan menciptakan lingkungan sekolah yang bersih dan sehat.',
+    soal: 'Tulislah sebuah teks berita singkat (1-2 paragraf) tentang kegiatan "Jumat Bersih" tersebut dengan memperhatikan unsur 5W+1H (apa, siapa, kapan, di mana, mengapa, dan bagaimana)!',
+    tingkat: 'sulit'
+  },
+  {
+    no: 38,
+    stimulus: '🎭 Perhatikan tema berikut: "Pentingnya Menuntut Ilmu"',
+    soal: 'Buatlah sebuah pantun nasihat dengan tema "Pentingnya Menuntut Ilmu"! Pastikan pantunmu memenuhi syarat: 4 baris, bersajak a-b-a-b, baris 1-2 sampiran, baris 3-4 isi.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 39,
+    stimulus: '📚 Perhatikan pernyataan berikut!\n\nBuku fiksi dan nonfiksi memiliki perbedaan yang mendasar dalam berbagai aspek, mulai dari isi, tujuan, bahasa, hingga cara penyajiannya.',
+    soal: 'Jelaskan minimal 3 perbedaan antara buku fiksi dan buku nonfiksi! Berikan masing-masing 1 contoh judul buku untuk setiap jenis.',
+    tingkat: 'sedang'
+  },
+  {
+    no: 40,
+    stimulus: '🦊 Perhatikan penggalan fabel berikut!\n\n"Seekor Gagak yang haus menemukan sebuah kendi berisi air, tetapi air di dalamnya sangat sedikit dan paruhnya tidak bisa menjangkau. Gagak berpikir keras. Akhirnya ia memasukkan batu-batu kecil satu per satu ke dalam kendi hingga permukaan air naik dan ia pun bisa minum."',
+    soal: 'Berdasarkan fabel di atas, jawablah pertanyaan berikut:\na) Apa watak tokoh Gagak? Jelaskan buktinya dari cerita!\nb) Apa amanat/pesan moral yang bisa kamu ambil dari cerita tersebut?\nc) Menurutmu, mengapa fabel sering digunakan untuk menyampaikan pesan moral? Jelaskan pendapatmu!',
+    tingkat: 'sulit'
+  }
+];
+
+// ============ APP STATE ============
+let currentSoal = 0;
+let jawabanPG = new Array(25).fill(null);
+let jawabanPGK = new Array(10).fill(null).map(() => []);
+let jawabanUraian = new Array(5).fill('');
+let timerInterval = null;
+let sisaWaktu = 0;
+let namaSiswa = '';
+let kelasSiswa = '';
+
+// ============ FUNCTIONS ============
+function mulaiUjian() {
+  namaSiswa = document.getElementById('input-nama').value.trim();
+  kelasSiswa = document.getElementById('input-kelas').value;
+  if (!namaSiswa || !kelasSiswa) {
+    document.getElementById('login-error').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('exam-screen').classList.remove('hidden');
+  document.getElementById('exam-nama').textContent = namaSiswa;
+  document.getElementById('exam-kelas-info').textContent = `${kelasSiswa} | ${config.nama_sekolah || defaultConfig.nama_sekolah}`;
+  
+  const waktuMenit = parseInt(config.waktu_ujian || defaultConfig.waktu_ujian) || 120;
+  sisaWaktu = waktuMenit * 60;
+  startTimer();
+  renderSoal();
+  lucide.createIcons();
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    sisaWaktu--;
+    const m = Math.floor(sisaWaktu / 60);
+    const s = sisaWaktu % 60;
+    const timerEl = document.getElementById('timer');
+    timerEl.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    if (sisaWaktu <= 300) timerEl.classList.add('timer-pulse', 'text-red-500');
+    if (sisaWaktu <= 0) { clearInterval(timerInterval); submitUjian(); }
+  }, 1000);
+}
+
+function renderSoal() {
+  const container = document.getElementById('soal-container');
+  let html = '';
+  
+  if (currentSoal < 25) {
+    // PG
+    const s = soalPG[currentSoal];
+    html = `<div class="soal-card bg-white rounded-xl p-6 shadow-sm border border-slate-200 fade-in">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">Pilihan Ganda</span>
+        <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">${s.tingkat}</span>
+      </div>
+      <div class="stimulus-box p-4 rounded-lg mb-4">
+        <p class="text-sm text-slate-700 whitespace-pre-line">${s.stimulus}</p>
+      </div>
+      <p class="font-semibold text-slate-800 mb-4">${s.no}. ${s.soal}</p>
+      <div class="space-y-2">
+        ${s.opsi.map((o, i) => `<button onclick="pilihPG(${i})" class="option-btn w-full text-left p-3 rounded-lg border ${jawabanPG[currentSoal] === i ? 'selected border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}">
+          <span class="font-semibold text-slate-500 mr-2">${String.fromCharCode(65+i)}.</span>${o}
+        </button>`).join('')}
+      </div>
+    </div>`;
+  } else if (currentSoal < 35) {
+    // PGK
+    const idx = currentSoal - 25;
+    const s = soalPGK[idx];
+    html = `<div class="soal-card bg-white rounded-xl p-6 shadow-sm border border-slate-200 fade-in">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded">PG Kompleks</span>
+        <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">${s.tingkat}</span>
+        <span class="text-xs text-slate-500">(Pilih lebih dari satu jawaban)</span>
+      </div>
+      <div class="stimulus-box p-4 rounded-lg mb-4">
+        <p class="text-sm text-slate-700 whitespace-pre-line">${s.stimulus}</p>
+      </div>
+      <p class="font-semibold text-slate-800 mb-4">${s.no}. ${s.soal}</p>
+      <div class="space-y-2">
+        ${s.opsi.map((o, i) => `<button onclick="pilihPGK(${idx},${i})" class="pgk-option option-btn w-full text-left p-3 rounded-lg border ${jawabanPGK[idx].includes(i) ? 'selected border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}">
+          <span class="font-semibold text-slate-500 mr-2">${String.fromCharCode(65+i)}.</span>${o}
+        </button>`).join('')}
+      </div>
+    </div>`;
+  } else {
+    // Uraian
+    const idx = currentSoal - 35;
+    const s = soalUraian[idx];
+    html = `<div class="soal-card bg-white rounded-xl p-6 shadow-sm border border-slate-200 fade-in">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">Uraian</span>
+        <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">${s.tingkat}</span>
+      </div>
+      <div class="stimulus-box p-4 rounded-lg mb-4">
+        <p class="text-sm text-slate-700 whitespace-pre-line">${s.stimulus}</p>
+      </div>
+      <p class="font-semibold text-slate-800 mb-4">${s.no}. ${s.soal}</p>
+      <textarea id="uraian-input" oninput="simpanUraian(${idx})" placeholder="Tuliskan jawabanmu di sini..." class="w-full h-40 p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none resize-y text-sm">${jawabanUraian[idx]}</textarea>
+    </div>`;
+  }
+  
+  container.innerHTML = html;
+  document.getElementById('current-num').textContent = currentSoal + 1;
+  document.getElementById('progress-bar').style.width = `${((currentSoal + 1) / 40) * 100}%`;
+}
+
+function pilihPG(idx) {
+  jawabanPG[currentSoal] = idx;
+  renderSoal();
+}
+
+function pilihPGK(soalIdx, opsiIdx) {
+  const arr = jawabanPGK[soalIdx];
+  const pos = arr.indexOf(opsiIdx);
+  if (pos > -1) arr.splice(pos, 1);
+  else arr.push(opsiIdx);
+  renderSoal();
+}
+
+function simpanUraian(idx) {
+  jawabanUraian[idx] = document.getElementById('uraian-input').value;
+}
+
+function nextSoal() { if (currentSoal < 39) { currentSoal++; renderSoal(); } }
+function prevSoal() { if (currentSoal > 0) { currentSoal--; renderSoal(); } }
+
+function hitungSkor() {
+  let skorPG = 0;
+  for (let i = 0; i < 25; i++) {
+    if (jawabanPG[i] === soalPG[i].jawaban) skorPG++;
+  }
+  let skorPGK = 0;
+  for (let i = 0; i < 10; i++) {
+    const benar = soalPGK[i].jawaban.sort().toString();
+    const siswa = jawabanPGK[i].sort().toString();
+    if (benar === siswa) skorPGK++;
+  }
+  return { skorPG, skorPGK, total: skorPG + skorPGK };
+}
+
+async function submitUjian() {
+  clearInterval(timerInterval);
+  const { skorPG, skorPGK, total } = hitungSkor();
+  
+  document.getElementById('exam-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.remove('hidden');
+  document.getElementById('result-nama').textContent = `${namaSiswa} — ${kelasSiswa}`;
+  document.getElementById('result-pg').textContent = skorPG;
+  document.getElementById('result-pgk').textContent = skorPGK;
+  document.getElementById('result-total').textContent = total;
+
+  // Save to Data SDK
+  if (savedRecords.length < 999) {
+    await window.dataSdk.create({
+      nama: namaSiswa,
+      kelas: kelasSiswa,
+      jawaban_pg: JSON.stringify(jawabanPG),
+      jawaban_pgk: JSON.stringify(jawabanPGK),
+      jawaban_uraian: JSON.stringify(jawabanUraian),
+      skor_pg: skorPG,
+      skor_pgk: skorPGK,
+      total_skor: total,
+      waktu_selesai: new Date().toISOString()
+    });
+  }
+  lucide.createIcons();
+}
+
+function lihatPembahasan() {
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('review-screen').classList.remove('hidden');
+  
+  let html = '<h3 class="font-heading text-lg font-bold text-slate-800 mb-4">Pilihan Ganda</h3>';
+  soalPG.forEach((s, i) => {
+    const isCorrect = jawabanPG[i] === s.jawaban;
+    html += `<div class="bg-white rounded-xl p-5 mb-3 border ${isCorrect ? 'border-green-200' : 'border-red-200'} shadow-sm">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-xs font-semibold px-2 py-1 rounded">${isCorrect ? '✓ Benar' : '✗ Salah'}</span>
+        <span class="text-xs text-slate-500">No. ${s.no}</span>
+      </div>
+      <p class="text-sm font-medium text-slate-800 mb-2">${s.soal}</p>
+      <p class="text-sm text-slate-600 mb-1">Jawabanmu: <strong>${jawabanPG[i] !== null ? String.fromCharCode(65 + jawabanPG[i]) : '-'}</strong> | Kunci: <strong>${String.fromCharCode(65 + s.jawaban)}</strong></p>
+      <p class="text-sm text-indigo-700 bg-indigo-50 p-2 rounded mt-2">💡 ${s.pembahasan}</p>
+    </div>`;
+  });
+
+  html += '<h3 class="font-heading text-lg font-bold text-slate-800 mt-6 mb-4">PG Kompleks</h3>';
+  soalPGK.forEach((s, i) => {
+    const siswa = jawabanPGK[i].sort().toString();
+    const benar = s.jawaban.sort().toString();
+    const isCorrect = siswa === benar;
+    html += `<div class="bg-white rounded-xl p-5 mb-3 border ${isCorrect ? 'border-green-200' : 'border-red-200'} shadow-sm">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-xs font-semibold px-2 py-1 rounded">${isCorrect ? '✓ Benar' : '✗ Salah'}</span>
+        <span class="text-xs text-slate-500">No. ${s.no}</span>
+      </div>
+      <p class="text-sm font-medium text-slate-800 mb-2">${s.soal}</p>
+      <p class="text-sm text-slate-600 mb-1">Jawabanmu: <strong>${jawabanPGK[i].map(j => String.fromCharCode(65+j)).join(', ') || '-'}</strong> | Kunci: <strong>${s.jawaban.map(j => String.fromCharCode(65+j)).join(', ')}</strong></p>
+      <p class="text-sm text-indigo-700 bg-indigo-50 p-2 rounded mt-2">💡 ${s.pembahasan}</p>
+    </div>`;
+  });
+
+  html += '<h3 class="font-heading text-lg font-bold text-slate-800 mt-6 mb-4">Uraian (Dinilai Guru)</h3>';
+  soalUraian.forEach((s, i) => {
+    html += `<div class="bg-white rounded-xl p-5 mb-3 border border-slate-200 shadow-sm">
+      <span class="text-xs text-slate-500">No. ${s.no}</span>
+      <p class="text-sm font-medium text-slate-800 my-2">${s.soal}</p>
+      <div class="bg-slate-50 p-3 rounded border border-slate-200">
+        <p class="text-sm text-slate-700 whitespace-pre-line">${jawabanUraian[i] || '<em class="text-slate-400">Tidak dijawab</em>'}</p>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('review-container').innerHTML = html;
+}
+
+// Init icons
+document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a045403dbe1fcde1',t:'MTc4MDIyMjg3OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
